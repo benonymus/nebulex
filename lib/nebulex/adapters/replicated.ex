@@ -354,7 +354,8 @@ defmodule Nebulex.Adapters.Replicated do
       name: name,
       primary_name: primary_opts[:name],
       task_sup: task_sup_name,
-      stats: stats
+      stats: stats,
+      callback: opts[:callback]
     }
 
     # Prepare child_spec
@@ -700,6 +701,10 @@ defmodule Nebulex.Adapters.Replicated.Bootstrap do
   def handle_info(:timeout, %{pid: pid} = state) when is_pid(pid) do
     # Start synchronization process
     :ok = sync_data(state)
+
+    unless is_nil(state.callback) do
+      state.callback.()
+    end
 
     # Delete global lock set when the server started
     :ok = unlock(state.name)
